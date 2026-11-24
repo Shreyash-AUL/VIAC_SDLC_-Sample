@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: pas
+      POSTGRES_USER: pas
+      POSTGRES_PASSWORD: local-only-password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pas -d pas"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - pas-data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://pas:local-only-password@db:5432/pas
+      CORS_ORIGINS: http://localhost:8080
+      DEMO_MODE: "true"
+      DEMO_TOKEN: ${PAS_DEMO_TOKEN:-local-demo-token}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  dashboard:
+    build:
+      context: frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+        VITE_DEMO_TOKEN: ${PAS_DEMO_TOKEN:-local-demo-token}
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  pas-data:

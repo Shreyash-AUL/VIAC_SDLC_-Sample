@@ -1,0 +1,11 @@
+.venv/
+.venv-*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+pas.db
+*.sqlite
+*.sqlite3
+node_modules/
+frontend/dist/
